@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from "./config/db.js";
 import authRoutes from './routes/authRoutes.js';
+import documentRouter from './routes/documentRoutes.js'
 
 
 dotenv.config();
@@ -18,6 +19,7 @@ app.use(express.json());
 
 
 app.use('/api/auth',authRoutes);
+app.use("/api/documents", documentRouter);
 
 app.get('/',(req,res)=>{
     res.send("hello World");
