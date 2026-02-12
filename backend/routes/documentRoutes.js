@@ -5,7 +5,7 @@ import {
      getDocumentStatus
  } from "../controllers/documentController.js";
 import { upload } from "../middleware/uploadMiddleware.js";
-import authMiddleware from "../middleware/auth.middleware.js";
+import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
