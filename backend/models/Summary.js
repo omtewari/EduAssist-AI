@@ -20,6 +20,11 @@ const summarySchema = new mongoose.Schema(
       required: true,
     },
 
+     bulletPoints: {
+      type: [String],
+      default: [],
+    },
+    
     summaryType: {
       type: String,
       enum: ["short", "detailed", "bullet"],
