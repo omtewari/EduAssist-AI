@@ -17,7 +17,12 @@ class DocumentProcessingService {
       await DocumentService.updateStatus(documentId, "processing");
 
       // 3️⃣ Extract text from file
-      const filePath = path.resolve(document.filePath);
+     const filePath = path.resolve(
+  process.cwd(),
+  "uploads/documents",
+  document.storedFileName
+);
+
       const extractionResult = await extractTextFromPDF(filePath);
 
       if (!extractionResult.success) {

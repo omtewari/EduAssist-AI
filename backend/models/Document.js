@@ -9,6 +9,8 @@ const documentSchema = new mongoose.Schema(
       index: true,
     },
 
+    title: String,
+
     originalFileName: {
       type: String,
       required: true,
@@ -20,12 +22,8 @@ const documentSchema = new mongoose.Schema(
     },
 
     fileSize: {
-      type: Number, // bytes
-      required: true,
-    },
-
-    pageCount: {
       type: Number,
+      required: true,
     },
 
     mimeType: {
@@ -33,19 +31,21 @@ const documentSchema = new mongoose.Schema(
       default: "application/pdf",
     },
 
+    pageCount: Number,
+
+    extractedText: String,
+
+    summaryText: String,
+
     status: {
       type: String,
       enum: ["uploaded", "processing", "completed", "failed"],
       default: "uploaded",
     },
 
-    errorMessage: {
-      type: String,
-    },
+    errorMessage: String,
 
-    lastProcessedAt: {
-      type: Date,
-    },
+    lastProcessedAt: Date
   },
   { timestamps: true }
 );

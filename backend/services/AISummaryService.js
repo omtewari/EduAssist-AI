@@ -32,7 +32,7 @@ Content:
 ${chunk}
       `.trim();
 
-      const bulletText = await AIProvider.generateText(prompt);
+      const bulletText = await AIProvider.generateSummary(prompt);
       const bullets = this.parseBullets(bulletText);
 
       allBullets.push(...bullets);
@@ -45,7 +45,7 @@ ${chunk}
       summaryText: uniqueBullets.join(" "),
       bulletPoints: uniqueBullets,
       wordCount: uniqueBullets.join(" ").split(" ").length,
-      modelUsed: AIProvider.getModelName(),
+      modelUsed: AIProvider.getAvailableModels().summary,
       generatedAt: new Date()
     };
   }

@@ -3,7 +3,6 @@ import DocumentProcessingService from "../services/documentProcessingService.js"
 
 /**
  * Upload Document
- * Creates document entry only (no processing yet)
  */
 export const uploadDocument = async (req, res) => {
   try {
@@ -17,7 +16,10 @@ export const uploadDocument = async (req, res) => {
     const document = await DocumentService.createDocument({
       userId: req.user.id,
       title: req.body.title || req.file.originalname,
-      filePath: req.file.path,
+      originalFileName: req.file.originalname,
+      storedFileName: req.file.filename,
+      fileSize: req.file.size,
+      mimeType: req.file.mimetype,
     });
 
     return res.status(201).json({
@@ -37,7 +39,6 @@ export const uploadDocument = async (req, res) => {
 
 /**
  * Start Document Processing
- * Triggers extraction + future AI summary
  */
 export const processDocument = async (req, res) => {
   try {
@@ -62,8 +63,8 @@ export const processDocument = async (req, res) => {
       });
     }
 
-    // Trigger processing (async logic inside service)
-    await DocumentProcessingService.process(documentId);
+    // Run processing in background
+    DocumentProcessingService.process(documentId);
 
     return res.status(200).json({
       success: true,
@@ -103,7 +104,7 @@ export const getDocumentStatus = async (req, res) => {
       success: true,
       documentId,
       status: document.status,
-      error: document.error || null,
+      error: document.errorMessage || null,
     });
   } catch (error) {
     return res.status(500).json({

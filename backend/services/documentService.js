@@ -1,53 +1,105 @@
 import Document from "../models/Document.js";
 
 class DocumentService {
-
-  // Create new document
-  static async createDocument({ userId, title, filePath }) {
+  /**
+   * Create new uploaded document
+   */
+  static async createDocument({
+    userId,
+    title,
+    originalFileName,
+    storedFileName,
+    fileSize,
+    mimeType,
+  }) {
     return await Document.create({
-      user: userId,
+      userId,
       title,
-      filePath,
-      status: "uploaded"
+      originalFileName,
+      storedFileName,
+      fileSize,
+      mimeType: mimeType || "application/pdf",
+      status: "uploaded",
     });
   }
 
-  // Get document by ID
+  /**
+   * Get document by ID
+   */
   static async getById(documentId) {
     return await Document.findById(documentId);
   }
 
-  // Get document that belongs to specific user
+  /**
+   * Get document only if owned by user
+   */
   static async getUserDocument(documentId, userId) {
     return await Document.findOne({
       _id: documentId,
-      user: userId
+      userId,
     });
   }
 
-  // Update document status
-  static async updateStatus(documentId, status, error = null) {
+  /**
+   * Update processing status
+   */
+  static async updateStatus(
+    documentId,
+    status,
+    errorMessage = null
+  ) {
     return await Document.findByIdAndUpdate(
       documentId,
-      { status, error },
+      {
+        status,
+        errorMessage,
+        lastProcessedAt: new Date(),
+      },
       { new: true }
     );
   }
 
-  // Save extracted text
-  static async saveExtractedText(documentId, text) {
+  /**
+   * Save extracted text
+   */
+  static async saveExtractedText(
+    documentId,
+    extractedText
+  ) {
     return await Document.findByIdAndUpdate(
       documentId,
-      { extractedText: text },
+      { extractedText },
       { new: true }
     );
   }
 
-  // Save summary (for next phase)
-  static async saveSummary(documentId, summary) {
+  /**
+   * Save AI summary
+   */
+  static async saveSummary(
+    documentId,
+    summary
+  ) {
     return await Document.findByIdAndUpdate(
       documentId,
-      { summary },
+      {
+        summaryText:
+          summary.summaryText || summary,
+      },
+      { new: true }
+    );
+  }
+
+  /**
+   * Update page count
+   */
+  static async updatePageCount(
+    documentId,
+    pageCount
+  ) {
+    return await Document.findByIdAndUpdate(
+      documentId,
+      { pageCount },
       { new: true }
     );
   }
