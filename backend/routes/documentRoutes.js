@@ -6,6 +6,8 @@ import {
  } from "../controllers/documentController.js";
 import { upload } from "../middleware/uploadMiddleware.js";
 import authMiddleware from "../middleware/authMiddleware.js";
+import { getUserDocuments } from "../controllers/documentController.js";
+import { getDocumentById } from "../controllers/documentController.js";
 
 const router = express.Router();
 
@@ -16,6 +18,8 @@ router.post(
   uploadDocument
 );
 
+
+
 router.post(
   "/:documentId/process",
   authMiddleware,
@@ -23,9 +27,20 @@ router.post(
 );
 
 router.get(
+  "/user",
+   authMiddleware, 
+   getUserDocuments);
+
+router.get(
   "/:documentId/status",
   authMiddleware,
   getDocumentStatus
+);
+
+router.get(
+  "/:documentId",
+  authMiddleware,
+  getDocumentById
 );
 
 export default router;

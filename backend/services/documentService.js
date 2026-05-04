@@ -113,6 +113,14 @@ class DocumentService {
       { new: true }
     );
   }
+
+  /**
+ * Get all documents for a user
+ */
+static async getUserDocuments(userId) {
+  return await Document.find({ userId })
+    .sort({ createdAt: -1 });
+}
 }
 
 export default DocumentService;

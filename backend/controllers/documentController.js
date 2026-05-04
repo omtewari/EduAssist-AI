@@ -37,6 +37,26 @@ export const uploadDocument = async (req, res) => {
   }
 };
 
+export const getUserDocuments = async (req, res) => {
+  try {
+    const userId = req.user?.id || "temp-user";
+
+    const documents = await DocumentService.getUserDocuments(userId);
+
+    return res.status(200).json({
+      success: true,
+      data: documents,
+    });
+  } catch (error) {
+    console.error("GET DOCUMENTS ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch documents",
+    });
+  }
+};
+
 /**
  * Start Document Processing
  */
@@ -136,6 +156,36 @@ export const getDocumentStatus = async (req, res) => {
       success: false,
       message: "Failed to fetch document status",
       error: error.message,
+    });
+  }
+};
+
+export const getDocumentById = async (req, res) => {
+  try {
+    const { documentId } = req.params;
+
+    const document = await DocumentService.getUserDocument(
+      documentId,
+      req.user.id
+    );
+
+    if (!document) {
+      return res.status(404).json({
+        success: false,
+        message: "Document not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: document,
+    });
+  } catch (error) {
+    console.error("GET DOCUMENT ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching document",
     });
   }
 };

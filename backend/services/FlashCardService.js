@@ -83,6 +83,67 @@ class FlashcardService {
   }
 
   /**
+   * Persist an already-generated AI flashcard result (e.g. from the document processing pipeline).
+   * Does not require document.status === "completed".
+   */
+  async saveGeneratedForDocument({
+    documentId,
+    userId,
+    aiResult,
+  }) {
+    const document = await Document.findOne({
+      _id: documentId,
+      userId,
+    });
+
+    if (!document) {
+      throw new Error("Document not found.");
+    }
+
+    if (
+      !aiResult?.flashcards ||
+      !Array.isArray(aiResult.flashcards) ||
+      aiResult.flashcards.length === 0
+    ) {
+      throw new Error("No flashcards to save.");
+    }
+
+    const version =
+      (await FlashcardSet.countDocuments({
+        documentId,
+        userId,
+      })) + 1;
+
+    const flashcardSet = await FlashcardSet.create({
+      documentId,
+      userId,
+      title: `${
+        document.originalFileName || "Study Material"
+      } Flashcards`,
+      modelUsed: aiResult.modelUsed || "Rule-Based NLP v2",
+      version,
+    });
+
+    const flashcardsToInsert = aiResult.flashcards.map(
+      (card) => ({
+        flashcardSetId: flashcardSet._id,
+        question: card.question,
+        answer: card.answer,
+        difficulty: card.difficulty,
+      })
+    );
+
+    const savedFlashcards =
+      await Flashcard.insertMany(flashcardsToInsert);
+
+    return {
+      flashcardSet,
+      totalCards: savedFlashcards.length,
+      flashcards: savedFlashcards,
+    };
+  }
+
+  /**
    * Get all flashcard sets of one document
    */
   async getSetsByDocument({

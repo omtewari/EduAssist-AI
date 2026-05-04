@@ -3,6 +3,7 @@ import extractTextFromPDF from "./TextExtractionService.js";
 import AISummaryService from "./AISummaryService.js";
 import AIFlashcardService from "./AIFlashcardService.js";
 import AIKeyTopicService from "./AIKeyTopicService.js";
+import FlashcardService from "./FlashCardService.js";
 import path from "path";
 
 class DocumentProcessingService {
@@ -103,6 +104,18 @@ class DocumentProcessingService {
         documentId,
         "save_summary",
         saveSummaryStartedAt
+      );
+
+      const saveFlashcardsStartedAt = Date.now();
+      await FlashcardService.saveGeneratedForDocument({
+        documentId,
+        userId: document.userId,
+        aiResult: flashcardsResult.value,
+      });
+      this.logDuration(
+        documentId,
+        "save_flashcards",
+        saveFlashcardsStartedAt
       );
 
       await DocumentService.updateStatus(
