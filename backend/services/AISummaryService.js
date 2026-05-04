@@ -15,8 +15,14 @@ class AISummaryService {
     // 2️⃣ Chunk text safely
     const chunks = this.chunkText(cleanedText);
 
+    if (chunks.length === 0) {
+      throw new Error("No valid chunks generated for summarization");
+    }
+
     // 3️⃣ Generate bullet summaries per chunk
     let allBullets = [];
+
+    const chunkErrors = [];
 
     for (const chunk of chunks) {
       const prompt = `
@@ -32,14 +38,33 @@ Content:
 ${chunk}
       `.trim();
 
-      const bulletText = await AIProvider.generateSummary(prompt);
-      const bullets = this.parseBullets(bulletText);
+      try {
+        const bulletText = await AIProvider.generateSummary(prompt);
 
-      allBullets.push(...bullets);
+        if (!bulletText || !bulletText.trim()) {
+          chunkErrors.push("AI returned empty summary output");
+          continue;
+        }
+
+        const bullets = this.parseBullets(bulletText);
+        if (bullets.length === 0) {
+          chunkErrors.push("AI output could not be parsed into bullet points");
+          continue;
+        }
+
+        allBullets.push(...bullets);
+      } catch (error) {
+        chunkErrors.push(error.message);
+      }
     }
 
     // 4️⃣ Deduplicate & limit bullets
     const uniqueBullets = [...new Set(allBullets)].slice(0, 7);
+
+    if (uniqueBullets.length === 0) {
+      const detail = chunkErrors[0] || "No usable summary produced";
+      throw new Error(`Summary generation produced no bullets. ${detail}`);
+    }
 
     return {
       summaryText: uniqueBullets.join(" "),
@@ -67,23 +92,51 @@ ${chunk}
   parseBullets(text) {
     return text
       .split("\n")
-      .map(line => line.replace(/^[-•*]\s*/, "").trim())
-      .filter(line => line.length > 0);
+      .map((line) => line.replace(/^[-•*\d.]+\s*/, "").trim())
+      .filter((line) => line.length > 0);
   }
 
   /**
    * Break long text into safe chunks
    */
-  chunkText(text, chunkSize = 2500) {
-    const chunks = [];
-    let start = 0;
-
-    while (start < text.length) {
-      chunks.push(text.slice(start, start + chunkSize));
-      start += chunkSize;
+  chunkText(text, chunkSize = 1800) {
+    if (!text || !text.trim()) {
+      return [];
     }
 
-    return chunks;
+    const chunks = [];
+    const sentences = text.split(/(?<=[.!?])\s+/);
+    let currentChunk = "";
+
+    for (const sentence of sentences) {
+      const candidate = currentChunk
+        ? `${currentChunk} ${sentence}`
+        : sentence;
+
+      if (candidate.length <= chunkSize) {
+        currentChunk = candidate;
+        continue;
+      }
+
+      if (currentChunk) {
+        chunks.push(currentChunk.trim());
+      }
+
+      if (sentence.length > chunkSize) {
+        for (let i = 0; i < sentence.length; i += chunkSize) {
+          chunks.push(sentence.slice(i, i + chunkSize).trim());
+        }
+        currentChunk = "";
+      } else {
+        currentChunk = sentence;
+      }
+    }
+
+    if (currentChunk.trim()) {
+      chunks.push(currentChunk.trim());
+    }
+
+    return chunks.filter(Boolean);
   }
 }
 

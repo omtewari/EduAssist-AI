@@ -41,6 +41,16 @@ class DocumentService {
   }
 
   /**
+   * Lightweight read for polling (avoids loading large extractedText/summaryText)
+   */
+  static async getUserDocumentLean(documentId, userId, projection) {
+    return await Document.findOne(
+      { _id: documentId, userId },
+      projection
+    ).lean();
+  }
+
+  /**
    * Update processing status
    */
   static async updateStatus(

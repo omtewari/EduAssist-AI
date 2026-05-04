@@ -8,6 +8,7 @@ import connectDB from "./config/db.js";
 import authRoutes from './routes/authRoutes.js';
 import documentRouter from './routes/documentRoutes.js'
 import flashcardRoutes from './routes/flashcardRoutes.js'
+import keyTopicRoutes from './routes/keyTopicRoutes.js'
 
 
 
@@ -26,6 +27,7 @@ app.use(express.json());
 app.use('/api/auth',authRoutes);
 app.use("/api/documents", documentRouter);
 app.use("/api/flashcards", flashcardRoutes);
+app.use("/api/keytopics",keyTopicRoutes);
 
 app.get('/',(req,res)=>{
     res.send("hello World");

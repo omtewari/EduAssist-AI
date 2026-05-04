@@ -44,9 +44,13 @@ export const processDocument = async (req, res) => {
   try {
     const { documentId } = req.params;
 
-    const document = await DocumentService.getUserDocument(
+    const staleProcessingMs =
+      Number(process.env.DOCUMENT_PROCESS_STALE_MS) || 45 * 60 * 1000;
+
+    const document = await DocumentService.getUserDocumentLean(
       documentId,
-      req.user.id
+      req.user.id,
+      { status: 1, lastProcessedAt: 1, updatedAt: 1 }
     );
 
     if (!document) {
@@ -57,14 +61,34 @@ export const processDocument = async (req, res) => {
     }
 
     if (document.status === "processing") {
-      return res.status(400).json({
-        success: false,
-        message: "Document is already being processed",
-      });
+      const refTime =
+        document.lastProcessedAt || document.updatedAt;
+      const refMs =
+        refTime instanceof Date
+          ? refTime.getTime()
+          : refTime
+            ? new Date(refTime).getTime()
+            : 0;
+      const ageMs = refMs ? Date.now() - refMs : Infinity;
+
+      if (ageMs < staleProcessingMs) {
+        return res.status(400).json({
+          success: false,
+          message: "Document is already being processed",
+        });
+      }
+
+      console.warn(
+        `[processDocument] restarting stale processing for ${documentId} (age=${ageMs}ms)`
+      );
     }
 
-    // Run processing in background
-    DocumentProcessingService.process(documentId);
+    // Defer heavy work so POST /process returns immediately and polls stay responsive
+    setImmediate(() => {
+      DocumentProcessingService.process(documentId).catch((err) =>
+        console.error("[DocumentProcessingService]", err?.message || err)
+      );
+    });
 
     return res.status(200).json({
       success: true,
@@ -88,9 +112,10 @@ export const getDocumentStatus = async (req, res) => {
   try {
     const { documentId } = req.params;
 
-    const document = await DocumentService.getUserDocument(
+    const document = await DocumentService.getUserDocumentLean(
       documentId,
-      req.user.id
+      req.user.id,
+      { status: 1, errorMessage: 1 }
     );
 
     if (!document) {
