@@ -1,4 +1,9 @@
 import Document from "../models/Document.js";
+import FlashcardSet from "../models/FlashcardSet.js";
+import Flashcard from "../models/Flashcard.js";
+import KeyTopic from "../models/KeyTopic.js";
+import Summary from "../models/Summary.js";
+import DocumentText from "../models/DocumentText.js";
 
 class DocumentService {
   /**
@@ -121,6 +126,41 @@ static async getUserDocuments(userId) {
   return await Document.find({ userId })
     .sort({ createdAt: -1 });
 }
+
+  /**
+   * Delete one user-owned document and related generated data
+   */
+  static async deleteUserDocument(documentId, userId) {
+    const deletedDocument = await Document.findOneAndDelete({
+      _id: documentId,
+      userId,
+    });
+
+    if (!deletedDocument) {
+      return null;
+    }
+
+    const flashcardSets = await FlashcardSet.find(
+      { documentId, userId },
+      { _id: 1 }
+    ).lean();
+    const flashcardSetIds = flashcardSets.map((set) => set._id);
+
+    if (flashcardSetIds.length > 0) {
+      await Flashcard.deleteMany({
+        flashcardSetId: { $in: flashcardSetIds },
+      });
+      await FlashcardSet.deleteMany({ _id: { $in: flashcardSetIds } });
+    }
+
+    await Promise.all([
+      KeyTopic.deleteMany({ documentId, userId }),
+      Summary.deleteMany({ documentId, userId }),
+      DocumentText.deleteMany({ documentId }),
+    ]);
+
+    return deletedDocument;
+  }
 }
 
 export default DocumentService;

@@ -6,6 +6,7 @@ import {
   fetchDocumentById,
   fetchDocumentStatus,
   startDocumentProcessing,
+  deleteDocument,
   clearSelectedDocument,
 } from "../redux/slices/documentSlice";
 import { clearFlashcards } from "../redux/slices/flashcardSlice";
@@ -97,6 +98,7 @@ export default function DocumentView() {
   const doc = useSelector((s) => s.document.selectedDocument);
   const detailLoading = useSelector((s) => s.document.detailLoading);
   const processLoading = useSelector((s) => s.document.processLoading);
+  const deleteLoading = useSelector((s) => s.document.deleteLoading);
 
   const fullDocLoadedRef = useRef(false);
 
@@ -142,6 +144,21 @@ export default function DocumentView() {
       dispatch(fetchDocumentById(id));
     } else {
       toast.error(result.payload || "Could not restart");
+    }
+  };
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      "Delete this PDF and all generated study content?"
+    );
+    if (!confirmed) return;
+
+    const result = await dispatch(deleteDocument(id));
+    if (deleteDocument.fulfilled.match(result)) {
+      toast.success("Document deleted");
+      navigate("/dashboard");
+    } else {
+      toast.error(result.payload || "Could not delete document");
     }
   };
 
@@ -228,6 +245,14 @@ export default function DocumentView() {
       />
 
       <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+        <button
+          type="button"
+          disabled={deleteLoading}
+          onClick={handleDelete}
+          className="inline-flex justify-center items-center px-5 py-2.5 rounded-xl bg-red-600 text-white font-semibold text-sm hover:bg-red-700 transition shadow-sm disabled:opacity-60"
+        >
+          {deleteLoading ? "Deleting…" : "Delete PDF"}
+        </button>
         {doc.status === "completed" ? (
           <>
             <Link

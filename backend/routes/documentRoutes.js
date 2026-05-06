@@ -2,7 +2,8 @@ import express from "express";
 import {
      uploadDocument,
      processDocument,
-     getDocumentStatus
+     getDocumentStatus,
+     deleteDocument
  } from "../controllers/documentController.js";
 import { upload } from "../middleware/uploadMiddleware.js";
 import authMiddleware from "../middleware/authMiddleware.js";
@@ -41,6 +42,12 @@ router.get(
   "/:documentId",
   authMiddleware,
   getDocumentById
+);
+
+router.delete(
+  "/:documentId",
+  authMiddleware,
+  deleteDocument
 );
 
 export default router;

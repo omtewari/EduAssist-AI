@@ -1,5 +1,7 @@
 import DocumentService from "../services/documentService.js";
 import DocumentProcessingService from "../services/documentProcessingService.js";
+import fs from "fs/promises";
+import path from "path";
 
 /**
  * Upload Document
@@ -186,6 +188,53 @@ export const getDocumentById = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Error fetching document",
+    });
+  }
+};
+
+export const deleteDocument = async (req, res) => {
+  try {
+    const { documentId } = req.params;
+    const userId = req.user.id;
+
+    const deletedDocument = await DocumentService.deleteUserDocument(
+      documentId,
+      userId
+    );
+
+    if (!deletedDocument) {
+      return res.status(404).json({
+        success: false,
+        message: "Document not found",
+      });
+    }
+
+    const filePath = path.resolve(
+      process.cwd(),
+      "uploads/documents",
+      deletedDocument.storedFileName
+    );
+
+    try {
+      await fs.unlink(filePath);
+    } catch (fileError) {
+      if (fileError?.code !== "ENOENT") {
+        console.warn(
+          `[deleteDocument] could not delete file ${deletedDocument.storedFileName}:`,
+          fileError?.message || fileError
+        );
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Document deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete document",
+      error: error.message,
     });
   }
 };

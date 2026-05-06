@@ -83,6 +83,20 @@ export const startDocumentProcessing = createAsyncThunk(
   }
 );
 
+export const deleteDocument = createAsyncThunk(
+  "document/delete",
+  async (documentId, { rejectWithValue }) => {
+    try {
+      await API.delete(`/documents/${documentId}`);
+      return documentId;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || err.message || "Delete failed"
+      );
+    }
+  }
+);
+
 const documentSlice = createSlice({
   name: "document",
   initialState: {
@@ -92,6 +106,7 @@ const documentSlice = createSlice({
     detailLoading: false,
     uploadLoading: false,
     processLoading: false,
+    deleteLoading: false,
     error: null,
   },
   reducers: {
@@ -174,6 +189,23 @@ const documentSlice = createSlice({
       })
       .addCase(startDocumentProcessing.rejected, (state, action) => {
         state.processLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(deleteDocument.pending, (state) => {
+        state.deleteLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteDocument.fulfilled, (state, action) => {
+        state.deleteLoading = false;
+        state.documents = state.documents.filter(
+          (doc) => doc._id !== action.payload
+        );
+        if (state.selectedDocument?._id === action.payload) {
+          state.selectedDocument = null;
+        }
+      })
+      .addCase(deleteDocument.rejected, (state, action) => {
+        state.deleteLoading = false;
         state.error = action.payload;
       });
   },

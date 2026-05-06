@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import {
   fetchUserDocuments,
   startDocumentProcessing,
+  deleteDocument,
 } from "../redux/slices/documentSlice";
 
 function SkeletonCard() {
@@ -35,7 +36,7 @@ function statusBadgeClass(status) {
 export default function Dashboard() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { documents, listLoading, processLoading, error } = useSelector(
+  const { documents, listLoading, processLoading, deleteLoading, error } = useSelector(
     (s) => s.document
   );
 
@@ -55,6 +56,21 @@ export default function Dashboard() {
       dispatch(fetchUserDocuments());
     } else {
       toast.error(result.payload || "Could not restart processing");
+    }
+  };
+
+  const handleDelete = async (e, docId) => {
+    e.stopPropagation();
+    const confirmed = window.confirm(
+      "Delete this PDF and all generated study content?"
+    );
+    if (!confirmed) return;
+
+    const result = await dispatch(deleteDocument(docId));
+    if (deleteDocument.fulfilled.match(result)) {
+      toast.success("Document deleted");
+    } else {
+      toast.error(result.payload || "Could not delete document");
     }
   };
 
@@ -129,6 +145,15 @@ export default function Dashboard() {
                   Retry processing
                 </button>
               )}
+
+              <button
+                type="button"
+                disabled={deleteLoading}
+                onClick={(e) => handleDelete(e, doc._id)}
+                className="mt-3 text-sm font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+              >
+                {deleteLoading ? "Deleting…" : "Delete PDF"}
+              </button>
             </div>
           ))}
         </div>
