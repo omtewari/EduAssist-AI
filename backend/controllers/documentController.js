@@ -1,7 +1,6 @@
 import DocumentService from "../services/documentService.js";
 import DocumentProcessingService from "../services/documentProcessingService.js";
-import fs from "fs/promises";
-import path from "path";
+import cloudinaryFileService from "../services/cloudinaryFileService.js";
 
 /**
  * Upload Document
@@ -15,11 +14,18 @@ export const uploadDocument = async (req, res) => {
       });
     }
 
+    const uploadResult = await cloudinaryFileService.uploadPdfBuffer(
+      req.file.buffer,
+      req.file.originalname
+    );
+
     const document = await DocumentService.createDocument({
       userId: req.user.id,
       title: req.body.title || req.file.originalname,
       originalFileName: req.file.originalname,
-      storedFileName: req.file.filename,
+      storedFileName: uploadResult.public_id,
+      fileUrl: uploadResult.secure_url,
+      cloudinaryPublicId: uploadResult.public_id,
       fileSize: req.file.size,
       mimeType: req.file.mimetype,
     });
@@ -209,22 +215,9 @@ export const deleteDocument = async (req, res) => {
       });
     }
 
-    const filePath = path.resolve(
-      process.cwd(),
-      "uploads/documents",
-      deletedDocument.storedFileName
+    await cloudinaryFileService.deletePdfByPublicId(
+      deletedDocument.cloudinaryPublicId
     );
-
-    try {
-      await fs.unlink(filePath);
-    } catch (fileError) {
-      if (fileError?.code !== "ENOENT") {
-        console.warn(
-          `[deleteDocument] could not delete file ${deletedDocument.storedFileName}:`,
-          fileError?.message || fileError
-        );
-      }
-    }
 
     return res.status(200).json({
       success: true,

@@ -4,7 +4,6 @@ import AISummaryService from "./AISummaryService.js";
 import AIFlashcardService from "./AIFlashcardService.js";
 import AIKeyTopicService from "./AIKeyTopicService.js";
 import FlashcardService from "./FlashCardService.js";
-import path from "path";
 
 class DocumentProcessingService {
   static async process(documentId) {
@@ -21,15 +20,9 @@ class DocumentProcessingService {
         "processing"
       );
 
-      const filePath = path.resolve(
-        process.cwd(),
-        "uploads/documents",
-        document.storedFileName
-      );
-
       const extractionStartedAt = Date.now();
       const extractionResult =
-        await extractTextFromPDF(filePath);
+        await extractTextFromPDF(document.fileUrl);
       this.logDuration(
         documentId,
         "extract_text",

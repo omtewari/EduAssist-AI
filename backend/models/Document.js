@@ -21,6 +21,22 @@ const documentSchema = new mongoose.Schema(
       required: true,
     },
 
+    fileUrl: {
+      type: String,
+      required: true,
+    },
+
+    storageProvider: {
+      type: String,
+      enum: ["cloudinary"],
+      default: "cloudinary",
+    },
+
+    cloudinaryPublicId: {
+      type: String,
+      required: true,
+    },
+
     fileSize: {
       type: Number,
       required: true,

@@ -14,6 +14,8 @@ class DocumentService {
     title,
     originalFileName,
     storedFileName,
+    fileUrl,
+    cloudinaryPublicId,
     fileSize,
     mimeType,
   }) {
@@ -22,6 +24,8 @@ class DocumentService {
       title,
       originalFileName,
       storedFileName,
+      fileUrl,
+      cloudinaryPublicId,
       fileSize,
       mimeType: mimeType || "application/pdf",
       status: "uploaded",

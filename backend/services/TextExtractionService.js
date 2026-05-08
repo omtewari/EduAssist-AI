@@ -1,19 +1,16 @@
-import fs from "fs";
+import axios from "axios";
 import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
 
-const extractTextFromPDF = async (filePath) => {
+const extractTextFromPDF = async (fileUrl) => {
   try {
-    if (!fs.existsSync(filePath)) {
-      return {
-        success: false,
-        error: "File not found",
-      };
-    }
-
-    const dataBuffer = fs.readFileSync(filePath);
+    const response = await axios.get(fileUrl, {
+      responseType: "arraybuffer",
+      timeout: 120000,
+    });
+    const dataBuffer = Buffer.from(response.data);
 
     const data = await pdfParse(dataBuffer);
 

@@ -17,7 +17,24 @@ const app = express()
 //DATABASE CONNECTION
 connectDB();
 
-app.use(cors());
+const allowedOrigins = (process.env.CLIENT_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 
@@ -33,7 +50,11 @@ app.get('/',(req,res)=>{
     res.send("hello World");
 })
 
-const port=process.env.PORT ;
+app.get("/health", (req, res) => {
+  res.status(200).json({ ok: true });
+});
+
+const port=process.env.PORT || 5000;
 
 app.listen(port, () => {
     console.log(`server is running on ${port}`);
