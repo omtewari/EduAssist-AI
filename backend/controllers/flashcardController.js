@@ -1,4 +1,4 @@
-import FlashcardService from "../services/FlashcardService.js";
+import FlashcardService from "../services/FlashCardService.js";
 
 class FlashcardController {
   /**
