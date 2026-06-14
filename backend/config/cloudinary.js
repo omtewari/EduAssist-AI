@@ -1,4 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
+import dotenv from "dotenv";
+dotenv.config();
 
 const requiredEnvVars = [
   "CLOUDINARY_CLOUD_NAME",
@@ -7,6 +9,7 @@ const requiredEnvVars = [
 ];
 
 const missingVars = requiredEnvVars.filter((name) => !process.env[name]);
+console.log("Cloud Name:", process.env.CLOUDINARY_CLOUD_NAME);
 
 if (missingVars.length > 0) {
   console.warn(
